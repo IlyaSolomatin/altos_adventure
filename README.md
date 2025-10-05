@@ -1,3 +1,7 @@
+An attempt to reproduce Alto's Adventure mobile game in Python
+
+![Alt text](alto.png)
+
 Controls: one button. Tap to jump on ground. Hold in air to backflip. Use Space or Left Mouse. Esc to quit.
 
 Run locally:
