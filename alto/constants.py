@@ -23,9 +23,9 @@ TERRAIN_AMPLITUDE = 80
 TERRAIN_SEGMENT_WIDTH = 16
 TERRAIN_ROUGHNESS = 0.55
 
-PLAYER_COLOR = (255, 110, 90)
+PLAYER_COLOR = (40, 40, 60)
 PLAYER_RADIUS = 10
-GRAVITY = 1400.0
+GRAVITY = 800.0
 JUMP_SPEED = 550.0
 GROUND_ACCEL = 600.0
 AIR_ACCEL = 250.0
@@ -36,6 +36,7 @@ CAMERA_LERP = 6.0
 MIN_FORWARD_SPEED = 120.0
 SLOPE_ACCEL = 1100.0
 ROTATE_SPEED_DEG = 220.0
+AUTO_LEVEL_FACTOR = 2.0  # proportional correction: deg/s per degree of backward tilt
 
 DOWNHILL_SLOPE_PER_PX = 0.18
 HILL_FREQ1 = 0.0014
@@ -43,3 +44,69 @@ HILL_FREQ2 = 0.0028
 HILL_WEIGHT2 = 0.45
 MICRO_SINE_AMPL = 36
 MICRO_SINE_FREQ = 0.002
+
+# --- Crash / Game Over ---
+CRASH_ANGLE_TOLERANCE = 45.0  # degrees from upright allowed on landing
+
+# --- Backflip scoring ---
+BACKFLIP_SCORE_BONUS = 500
+COMBO_MULTIPLIER_BONUS = 200
+POPUP_DURATION = 1.5  # seconds
+
+# --- Obstacles ---
+OBSTACLE_MIN_SPACING = 1200
+OBSTACLE_MAX_SPACING = 2800
+ROCK_WIDTH = 28
+ROCK_HEIGHT = 24
+ROCK_COLOR = (80, 75, 70)
+
+# --- Post-trick invincibility ---
+INVINCIBILITY_DURATION = 3.0
+INVINCIBILITY_BLINK_START = 1.0
+INVINCIBILITY_GLOW_COLOR = (255, 220, 80)
+ROCK_SMASH_SCORE = 250
+
+# --- Collectibles ---
+COIN_RADIUS = 8
+COIN_COLOR = (255, 210, 60)
+COIN_OUTLINE_COLOR = (200, 160, 30)
+COIN_SCORE = 100
+COIN_GROUP_MIN_SPACING = 400
+COIN_GROUP_MAX_SPACING = 900
+COIN_ARC_HEIGHT = 80
+COIN_ARC_COUNT_MIN = 3
+COIN_ARC_COUNT_MAX = 7
+
+# --- Particles ---
+PARTICLE_LIFETIME = 0.5
+PARTICLE_SPEED = 40.0
+PARTICLE_COUNT_PER_FRAME = 2
+PARTICLE_LANDING_BURST = 12
+PARTICLE_COLOR = (255, 255, 255)
+PARTICLE_MAX_RADIUS = 3
+
+# --- Day/Night cycle ---
+DAY_CYCLE_DURATION = 120.0  # seconds for a full cycle
+SKY_PALETTES = [
+    # dawn
+    {"top": (45, 30, 60), "bottom": (220, 140, 100), "layers": [(35, 25, 45), (50, 35, 55), (70, 50, 70), (100, 75, 85)]},
+    # day
+    {"top": (28, 43, 66), "bottom": (184, 204, 222), "layers": [(20, 30, 50), (30, 42, 64), (45, 58, 82), (70, 85, 110)]},
+    # sunset
+    {"top": (40, 30, 70), "bottom": (230, 120, 70), "layers": [(30, 22, 55), (45, 30, 60), (65, 45, 65), (90, 65, 75)]},
+    # dusk
+    {"top": (20, 18, 40), "bottom": (60, 50, 80), "layers": [(15, 14, 30), (22, 20, 38), (32, 28, 48), (48, 42, 62)]},
+    # night
+    {"top": (8, 10, 22), "bottom": (18, 22, 40), "layers": [(6, 8, 18), (10, 13, 25), (16, 20, 34), (25, 30, 48)]},
+]
+
+# --- Terrain ramps ---
+RAMP_MIN_SPACING = 2500
+RAMP_MAX_SPACING = 5000
+RAMP_WIDTH = 500
+RAMP_HEIGHT = 65
+
+# --- HUD ---
+HUD_TEXT_COLOR = (255, 255, 255, 200)
+HUD_FONT_SIZE = 26
+COIN_ICON_RADIUS = 6

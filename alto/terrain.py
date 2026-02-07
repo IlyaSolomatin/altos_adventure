@@ -18,7 +18,49 @@ from .constants import (
     HILL_WEIGHT2,
     MICRO_SINE_AMPL,
     MICRO_SINE_FREQ,
+    RAMP_MIN_SPACING,
+    RAMP_MAX_SPACING,
+    RAMP_WIDTH,
+    RAMP_HEIGHT,
 )
+
+
+class Ramp:
+    def __init__(self, x: float, width: float, height: float) -> None:
+        self.x = x
+        self.width = width
+        self.height = height
+
+    def offset_at(self, world_x: float) -> float:
+        """Return the height offset added by this ramp at world_x."""
+        dx = world_x - self.x
+        if dx < 0 or dx > self.width:
+            return 0.0
+        t = dx / self.width
+        # Long gentle upslope (80%), short steep backside (20%)
+        peak_t = 0.8
+        if t <= peak_t:
+            s = t / peak_t
+            smooth = s * s * (3.0 - 2.0 * s)
+            return -self.height * smooth
+        else:
+            s = (t - peak_t) / (1.0 - peak_t)
+            smooth = s * s * (3.0 - 2.0 * s)
+            return -self.height * (1.0 - smooth)
+
+    def slope_at(self, world_x: float) -> float:
+        """Return the slope contribution of this ramp."""
+        dx = world_x - self.x
+        if dx < 0 or dx > self.width:
+            return 0.0
+        t = dx / self.width
+        peak_t = 0.8
+        if t <= peak_t:
+            s = t / peak_t
+            return -self.height * 6.0 * s * (1.0 - s) / (peak_t * self.width)
+        else:
+            s = (t - peak_t) / (1.0 - peak_t)
+            return self.height * 6.0 * s * (1.0 - s) / ((1.0 - peak_t) * self.width)
 
 
 class Terrain:
@@ -32,6 +74,11 @@ class Terrain:
         self.points: List[Tuple[int, int]] = []
         self._drift_origin_x = 0
         self._ensure_points_cover(0, WINDOW_WIDTH * 3)
+
+        # Ramps
+        self.ramp_rng = random.Random(seed + 100)
+        self.ramps: List[Ramp] = []
+        self.next_ramp_x = 1500.0
 
     def _ensure_points_cover(self, start_x: int, end_x: int) -> None:
         if not self.points:
@@ -50,6 +97,18 @@ class Terrain:
             self._drift_origin_x = xs[0]
         return [(x, int(self._height_at(x))) for x in xs]
 
+    def update_ramps(self, camera_x: float) -> None:
+        """Spawn ramps ahead of camera and remove those behind."""
+        spawn_edge = camera_x + WINDOW_WIDTH * 3
+        while self.next_ramp_x < spawn_edge:
+            width = RAMP_WIDTH + self.ramp_rng.uniform(-80, 120)
+            height = RAMP_HEIGHT + self.ramp_rng.uniform(-15, 20)
+            self.ramps.append(Ramp(self.next_ramp_x, width, height))
+            spacing = self.ramp_rng.uniform(RAMP_MIN_SPACING, RAMP_MAX_SPACING)
+            self.next_ramp_x += spacing
+        self.ramps = [r for r in self.ramps
+                      if r.x + r.width > camera_x - WINDOW_WIDTH]
+
     def draw(self, screen: pygame.Surface, camera_x: float, camera_y: float) -> None:
         screen_w = screen.get_width()
         start_x = int(camera_x) - screen_w
@@ -61,7 +120,7 @@ class Terrain:
         x = start_x
         poly = []
         while x <= end_x:
-            y = self._height_at(x)
+            y = self.sample_height(x)
             poly.append((int(x - camera_x), int(y - camera_y)))
             x += step_px
         if not poly:
@@ -100,24 +159,21 @@ class Terrain:
     def sample_height(self, world_x: float) -> float:
         if not self.points:
             return self.baseline_y
-        # Ensure coverage around the query point
         self._ensure_points_cover(int(world_x) - WINDOW_WIDTH, int(world_x) + WINDOW_WIDTH)
-        # Find segment indices
-        idx = 0
-        while idx + 1 < len(self.points) and self.points[idx + 1][0] < world_x:
-            idx += 1
-        idx = max(0, min(len(self.points) - 2, idx))
-        return self._height_at(world_x)
+        h = self._height_at(world_x)
+        # Add ramp offsets
+        for ramp in self.ramps:
+            h += ramp.offset_at(world_x)
+        return h
 
     def sample_slope(self, world_x: float) -> float:
         if not self.points:
             return 0.0
         self._ensure_points_cover(int(world_x) - WINDOW_WIDTH, int(world_x) + WINDOW_WIDTH)
-        idx = 0
-        while idx + 1 < len(self.points) and self.points[idx + 1][0] < world_x:
-            idx += 1
-        idx = max(0, min(len(self.points) - 2, idx))
-        return self._slope_at(world_x)
+        s = self._slope_at(world_x)
+        for ramp in self.ramps:
+            s += ramp.slope_at(world_x)
+        return s
 
     def _height_at(self, x: float) -> float:
         drift = (x - self._drift_origin_x) * DOWNHILL_SLOPE_PER_PX
@@ -134,4 +190,8 @@ class Terrain:
         dmicro_dx = math.cos(x * MICRO_SINE_FREQ) * MICRO_SINE_FREQ * MICRO_SINE_AMPL
         return dbase_dx + dmicro_dx + DOWNHILL_SLOPE_PER_PX
 
-
+    def reset(self) -> None:
+        self.points.clear()
+        self.ramps.clear()
+        self.next_ramp_x = 1500.0
+        self._ensure_points_cover(0, WINDOW_WIDTH * 3)
